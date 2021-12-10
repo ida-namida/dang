@@ -1,0 +1,14 @@
+FROM golang:1.17 AS builder
+RUN mkdir -p /dang
+COPY . /dang
+RUN cd /dang && CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o dang ./cmd/main.go
+
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+WORKDIR /root
+COPY --from=builder ./dang/dang .
+ARG PORT
+ENV PORT=${PORT}
+ARG KOPURO_BASE_URL
+ENV KOPURO_BASE_URL=${KOPURO_BASE_URL}
+ENTRYPOINT ["/root/dang"]
